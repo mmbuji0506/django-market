@@ -479,3 +479,41 @@ def get_total_sales(request):
         total_sales = Sale.objects.aggregate(total=Sum('total_price'))['total'] or 0
         cache.set('total_sales', total_sales, 60 * 5)
     return Response({'total_sales': total_sales}, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+def get_product_by_barcode(request):
+    ip = request.META.get('REMOTE_ADDR')
+    cache_key = f"rate_limit_barcode_{ip}"
+    request_count = cache.get(cache_key, 0)
+    if request_count >= 10:
+        return Response({'error': 'Too many requests'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+    cache.set(cache_key, request_count + 1, 60)
+
+    barcode = request.GET.get('barcode')
+    name = request.GET.get('name')
+    try:
+        if barcode:
+            product = Product.objects.get(barcode=barcode)
+        elif name:
+            product = Product.objects.filter(name__icontains=name).first()
+            if not product:
+                return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+        inventory = Inventory.objects.get(product=product)
+        data = {
+            'barcode': product.barcode,
+            'name': product.name,
+            'price': str(product.price),
+            'stock': inventory.quantity,
+        }
+        return Response(data, status=status.HTTP_200_OK)
+    except (Product.DoesNotExist, Inventory.DoesNotExist):
+        return Response({'error': 'Product or inventory not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+@api_view(['GET'])
+def product_autocomplete(request):
+    query = request.GET.get('q', '')
+    if query:
+        products = Product.objects.filter(name__icontains=query)[:10]
+        results = [{'barcode': p.barcode, 'name': p.name} for p in products]
+        return Response(results, status=status.HTTP_200_OK)
+    return Response([], status=status.HTTP_200_OK)

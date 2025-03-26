@@ -4,7 +4,7 @@ from .views import home, permission_denied
 from rest_framework.routers import DefaultRouter
 from products.views import CategoryViewSet, ProductViewSet, product_list, get_product_by_barcode
 from inventory.views import inventory_list, update_inventory
-from sales.views import process_sale, dashboard, get_total_sales, clear_cart,notifications,export_activity_pdf,export_abandonment_csv,export_abandonment_pdf,export_activity_csv, finalize_sale, remove_cart_item, edit_cart_item,print_receipt,export_sales_pdf,export_sales_csv, activity_log
+from sales.views import process_sale, dashboard, get_total_sales, clear_cart,product_autocomplete,notifications,export_activity_pdf,export_abandonment_csv,export_abandonment_pdf,export_activity_csv, finalize_sale, remove_cart_item, edit_cart_item,print_receipt,export_sales_pdf,export_sales_csv, activity_log
 from users.views import user_list, user_edit
 from django.conf.urls import handler403
 from django.contrib.auth.views import LogoutView
@@ -41,6 +41,7 @@ urlpatterns = [
     path('dashboard/export/activity/csv/', export_activity_csv, name='export_activity_csv'),
     path('dashboard/export/activity/pdf/', export_activity_pdf, name='export_activity_pdf'),
     path('dashboard/notifications/', notifications, name='notifications'),
+    path('api/product-autocomplete/', product_autocomplete, name='product_autocomplete'),
 ]
 
 handler403 = 'supermarket_management.views.permission_denied'

@@ -152,3 +152,9 @@ CACHES = {
         'LOCATION': 'unique-snowflake',
     }
 }
+
+
+# Session settings
+SESSION_COOKIE_AGE = 900  # 15 minutes in seconds
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Expire session when browser closes
+SESSION_SAVE_EVERY_REQUEST = True  # Reset session timer with each request

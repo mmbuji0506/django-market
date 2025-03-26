@@ -1,86 +1,231 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Add this for mobile scaling -->
-    <title>Supermarket Management</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Supermarket Management{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <style>
-        /* Custom styles for small screens */
-        @media (max-width: 768px) {
-            .navbar-nav {
-                text-align: center;
-            }
-            .navbar-nav .nav-item {
-                margin: 5px 0;
-            }
+        body {
+            font-family: 'Poppins', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
         }
+        .sidebar {
+            background: linear-gradient(180deg, #006d77 0%, #83c5be 100%);
+        }
+        .sidebar a:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .btn-modern {
+            background: linear-gradient(45deg, #7209b7, #f72585);
+            color: #fff;
+            border: none;
+        }
+        .btn-modern:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(114, 9, 183, 0.4);
+        }
+        [data-bs-theme="dark"] .sidebar {
+            background: linear-gradient(180deg, #14213d 0%, #3a506b 100%);
+        }
+        [data-bs-theme="dark"] .btn-modern {
+            background: linear-gradient(45deg, #5c677d, #d00000);
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Spinner */
+.spinner {
+    display: none;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #fff;
+    border-top: 3px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Bounce Animation */
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-10px); }
+    60% { transform: translateY(-5px); }
+}
+.bounce {
+    animation: bounce 1s;
+}
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <!-- Sidebar -->
+    {% if user.is_authenticated %}
+    <div class="sidebar" id="sidebar">
+        <a href="{% url 'home' %}" class="navbar-brand text-center mb-3">Supermarket</a>
+        <a href="{% url 'product_list' %}"><i class="fas fa-box me-2"></i>Products</a>
+        {% if user.userprofile.role in 'manager,admin' %}
+            <a href="{% url 'inventory_list' %}"><i class="fas fa-warehouse me-2"></i>Inventory</a>
+            <a href="{% url 'dashboard' %}"><i class="fas fa-chart-line me-2"></i>Dashboard</a>
+            <a href="{% url 'notifications' %}"><i class="fas fa-bell me-2"></i>Notifications</a>
+            <a href="{% url 'activity_log' %}"><i class="fas fa-history me-2"></i>Activity Log</a>
+        {% endif %}
+        {% if user.userprofile.role == 'admin' %}
+            <a href="{% url 'user_list' %}"><i class="fas fa-users me-2"></i>Users</a>
+        {% endif %}
+        {% if user.userprofile.role == 'cashier' %}
+            <a href="{% url 'process_sale' %}"><i class="fas fa-cash-register me-2"></i>Sales</a>
+        {% endif %}
+        <a href="#" id="toggleTheme"><i class="fas fa-moon me-2"></i>Toggle Dark Mode</a>
+        <a href="{% url 'logout' %}" id="logoutLink"><i class="fas fa-sign-out-alt me-2"></i>Logout</a>
+    </div>
+    {% endif %}
+
+    <!-- Top Bar for Mobile -->
+    <nav class="navbar navbar-dark bg-dark d-lg-none">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'home' %}">Supermarket</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" id="sidebarToggle">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'product_list' %}">Products</a>
-                    </li>
-                    {% if user.is_authenticated and user.userprofile.role in 'manager,admin' %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'inventory_list' %}">Inventory</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'notifications' %}">Notifications</a>
-                        </li>
-                    {% endif %}
-                    {% if user.is_authenticated and user.userprofile.role == 'admin' %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'user_list' %}">Users</a>
-                        </li>
-                    {% endif %}
-                    {% if user.is_authenticated and user.userprofile.role == 'cashier' %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'process_sale' %}">Sales</a>
-                        </li>
-                    {% endif %}
-                </ul>
-                <ul class="navbar-nav ms-auto">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <span class="nav-link">
-                                Hello, {{ user.username }}
-                                {% if user.userprofile %}
-                                    ({{ user.userprofile.role }})
-                                {% else %}
-                                    (No Role Assigned)
-                                {% endif %}
-                            </span>
-                        </li>
-                        <li class="nav-item">
-                            <form action="{% url 'logout' %}" method="post" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="nav-link btn btn-link" style="color: #fff; text-decoration: none;">Logout</button>
-                            </form>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">Login</a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
+            <a class="navbar-brand" href="{% url 'home' %}">Supermarket</a>
         </div>
     </nav>
-    <div class="container mt-4">
-        {% block content %}{% endblock %}
+
+    <!-- Main Content -->
+    <div class="content" id="content">
+        {% if not user.is_authenticated %}
+            <nav class="navbar navbar-dark bg-dark mb-4">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="{% url 'home' %}">Supermarket</a>
+                    <a class="btn btn-outline-light btn-modern" href="{% url 'login' %}">Login</a>
+                </div>
+            </nav>
+        {% endif %}
+        <div class="container-fluid fade-in">
+            {% block content %}{% endblock %}
+        </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Logout Warning Modal -->
+    {% if user.is_authenticated %}
+    <div class="modal fade" id="logoutWarningModal" tabindex="-1" aria-labelledby="logoutWarningModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="logoutWarningModalLabel">Inactivity Warning</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    You will be logged out in <span id="countdown">30</span> seconds due to inactivity. Click "Stay Logged In" to continue your session.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary btn-modern" id="stayLoggedIn">Stay Logged In</button>
+                    <button type="button" class="btn btn-secondary btn-modern" id="logoutNow">Logout Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <form id="logoutForm" action="{% url 'logout' %}" method="post" style="display: none;">
+        {% csrf_token %}
+    </form>
+    {% endif %}
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js" integrity="sha512-yFjZbTYRCJodnuyGlsKamNE/LlEaEAxSUDe5+u61mV8zzqJVFOH7TnULE2/PP/l5vKWpUNnF4VGVkXh3MjgLsg==" crossorigin="anonymous"></script>
+    <script>
+        // Sidebar Toggle for Mobile
+        $('#sidebarToggle').on('click', function() {
+            $('#sidebar').toggleClass('sidebar-active');
+            $('#content').toggleClass('content-full');
+        });
+
+        // Dark Mode Toggle
+        $('#toggleTheme').on('click', function(e) {
+            e.preventDefault();
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // Load Theme from Local Storage
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+
+        {% if user.is_authenticated %}
+        // Auto-Logout Logic
+        const IDLE_TIMEOUT = 900;  // 15 minutes
+        const WARNING_TIMEOUT = 30;  // 30 seconds warning
+        let idleTime = 0;
+        let warningShown = false;
+        let countdownInterval;
+
+        function performLogout() {
+            $.ajax({
+                url: "{% url 'logout' %}",
+                type: "POST",
+                data: $('#logoutForm').serialize(),
+                success: function() {
+                    window.location.href = "{% url 'login' %}";
+                },
+                error: function(xhr, status, error) {
+                    console.error("Logout failed:", error);
+                    window.location.href = "{% url 'login' %}";
+                }
+            });
+        }
+
+        function resetIdleTimer() {
+            idleTime = 0;
+            if (warningShown) {
+                clearInterval(countdownInterval);
+                $('#logoutWarningModal').modal('hide');
+                warningShown = false;
+            }
+        }
+
+        setInterval(() => {
+            idleTime++;
+            if (idleTime >= IDLE_TIMEOUT - WARNING_TIMEOUT && !warningShown) {
+                showWarning();
+            } else if (idleTime >= IDLE_TIMEOUT && warningShown) {
+                performLogout();
+            }
+        }, 1000);
+
+        function showWarning() {
+            warningShown = true;
+            let countdown = WARNING_TIMEOUT;
+            $('#countdown').text(countdown);
+            $('#logoutWarningModal').modal('show');
+            countdownInterval = setInterval(() => {
+                countdown--;
+                $('#countdown').text(countdown);
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    performLogout();
+                }
+            }, 1000);
+        }
+
+        $(document).on('mousemove keydown click', resetIdleTimer);
+        $('#stayLoggedIn').on('click', resetIdleTimer);
+        $('#logoutNow').on('click', performLogout);
+        $('#logoutLink').on('click', function(e) {
+            e.preventDefault();
+            performLogout();
+        });
+        {% endif %}
+    </script>
 </body>
 </html>
