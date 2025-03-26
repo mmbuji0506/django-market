@@ -21,7 +21,8 @@ class ProductViewSet(viewsets.ModelViewSet):
 @role_required('cashier')
 def product_list(request):
     products = Product.objects.all()
-    return render(request, 'products/product_list.html', {'products': products})
+    categories = Category.objects.all()
+    return render(request, 'products/product_list.html', {'products': products, 'categories': categories})
 
 @api_view(['GET'])
 def get_product_by_barcode(request):

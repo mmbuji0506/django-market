@@ -1,38 +1,135 @@
 {% extends 'base.html' %}
 {% block content %}
-    <h2>Inventory Management</h2>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Product</th>
-                <th>Quantity</th>
-                <th>Low Stock Threshold</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
+    <div class="inventory-container animate__animated animate__fadeIn">
+        <h2 class="mb-4 text-center" style="color: #006d77;">Inventory Management</h2>
+
+        <!-- Search and Filter Bar -->
+        <div class="row g-3 mb-4 animate__animated animate__fadeInUp">
+            <div class="col-md-6 col-12">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search by product name" autocomplete="off">
+                </div>
+            </div>
+            <div class="col-md-3 col-12">
+                <select id="statusFilter" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="low">Low Stock</option>
+                    <option value="in">In Stock</option>
+                </select>
+            </div>
+            <div class="col-md-3 col-12">
+                <button class="btn btn-modern w-100" id="filterButton" data-bs-toggle="tooltip" title="Apply filters">Filter</button>
+            </div>
+        </div>
+
+        <!-- Inventory Grid -->
+        <div class="row g-4" id="inventoryGrid">
             {% for item in inventory_items %}
-                <tr>
-                    <td>{{ item.product.name }}</td>
-                    <td>{{ item.quantity }}</td>
-                    <td>{{ item.low_stock_threshold }}</td>
-                    <td>
-                        {% if item.is_low_stock %}
-                            <span class="badge bg-danger">Low Stock</span>
-                        {% else %}
-                            <span class="badge bg-success">In Stock</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a href="{% url 'update_inventory' item.id %}" class="btn btn-sm btn-primary">Update</a>
-                    </td>
-                </tr>
+                <div class="col-md-4 col-sm-6 col-12 inventory-item animate__animated animate__zoomIn" 
+                     data-name="{{ item.product.name|lower }}" 
+                     data-status="{% if item.is_low_stock %}low{% else %}in{% endif %}">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">{{ item.product.name }}</h5>
+                            <p class="text-muted">Quantity: <span class="fw-bold">{{ item.quantity }}</span></p>
+                            <p class="text-muted">Threshold: <span class="fw-bold">{{ item.low_stock_threshold }}</span></p>
+                            <p>
+                                {% if item.is_low_stock %}
+                                    <span class="badge bg-danger">Low Stock</span>
+                                {% else %}
+                                    <span class="badge bg-success">In Stock</span>
+                                {% endif %}
+                            </p>
+                            <a href="{% url 'update_inventory' item.id %}" class="btn btn-primary btn-modern btn-sm mt-2" data-bs-toggle="tooltip" title="Update this item">Update</a>
+                        </div>
+                    </div>
+                </div>
             {% empty %}
-                <tr>
-                    <td colspan="5">No inventory items found.</td>
-                </tr>
+                <div class="col-12 text-center animate__animated animate__fadeIn">
+                    <p class="text-muted">No inventory items found.</p>
+                </div>
             {% endfor %}
-        </tbody>
-    </table>
+        </div>
+    </div>
+
+    <style>
+        .inventory-container {
+            padding: 20px;
+            background: linear-gradient(135deg, #edf6f9 0%, #83c5be 100%);
+            min-height: 100vh;
+        }
+        [data-bs-theme="dark"] .inventory-container {
+            background: linear-gradient(135deg, #14213d 0%, #3a506b 100%);
+        }
+        .card {
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        [data-bs-theme="dark"] .card {
+            background: rgba(44, 44, 44, 0.9);
+            color: #e0e0e0;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 10px;
+        }
+        .form-control:focus, .form-select:focus {
+            box-shadow: 0 0 10px rgba(0, 109, 119, 0.3);
+            border-color: #006d77;
+        }
+        .btn-modern {
+            font-size: 1rem;
+            padding: 10px;
+        }
+        .badge {
+            font-size: 0.9rem;
+            padding: 6px 12px;
+        }
+    </style>
+
+    <script>
+        $(document).ready(function() {
+            $('[data-bs-toggle="tooltip"]').tooltip();
+
+            // Search and Filter Logic
+            function filterInventory() {
+                const searchText = $('#searchInput').val().toLowerCase();
+                const status = $('#statusFilter').val().toLowerCase();
+
+                $('.inventory-item').each(function() {
+                    const name = $(this).data('name');
+                    const itemStatus = $(this).data('status');
+                    const matchesSearch = name.includes(searchText);
+                    const matchesStatus = !status || itemStatus === status;
+
+                    if (matchesSearch && matchesStatus) {
+                        $(this).show().addClass('animate__animated animate__zoomIn');
+                    } else {
+                        $(this).hide().removeClass('animate__zoomIn');
+                    }
+                });
+            }
+
+            $('#searchInput').on('input', filterInventory);
+            $('#statusFilter').on('change', filterInventory);
+            $('#filterButton').on('click', function() {
+                $(this).addClass('bounce');
+                filterInventory();
+                setTimeout(() => $(this).removeClass('bounce'), 1000);
+            });
+
+            // Bounce effect on Update buttons
+            $('.btn-modern').on('click', function() {
+                $(this).addClass('bounce');
+                setTimeout(() => $(this).removeClass('bounce'), 1000);
+            });
+        });
+    </script>
 {% endblock %}

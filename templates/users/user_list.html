@@ -1,32 +1,140 @@
 {% extends 'base.html' %}
 {% block content %}
-    <h2>User Management</h2>
-    <table class="table table-striped mt-4">
-        <thead>
-            <tr>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Active</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
+    <div class="user-container animate__animated animate__fadeIn">
+        <h2 class="mb-4 text-center" style="color: #006d77;">User Management</h2>
+
+        <!-- Search and Filter Bar -->
+        <div class="row g-3 mb-4 animate__animated animate__fadeInUp">
+            <div class="col-md-6 col-12">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search by username or email" autocomplete="off">
+                </div>
+            </div>
+            <div class="col-md-3 col-12">
+                <select id="roleFilter" class="form-select">
+                    <option value="">All Roles</option>
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
+                    <option value="cashier">Cashier</option>
+                </select>
+            </div>
+            <div class="col-md-3 col-12">
+                <button class="btn btn-modern w-100" id="filterButton" data-bs-toggle="tooltip" title="Apply filters">Filter</button>
+            </div>
+        </div>
+
+        <!-- User Grid -->
+        <div class="row g-4" id="userGrid">
             {% for user in users %}
-                <tr>
-                    <td>{{ user.username }}</td>
-                    <td>{{ user.email|default:"N/A" }}</td>
-                    <td>{{ user.userprofile.role }}</td>
-                    <td>{{ user.is_active|yesno:"Yes,No" }}</td>
-                    <td>
-                        <a href="{% url 'user_edit' user.id %}" class="btn btn-sm btn-primary">Edit</a>
-                    </td>
-                </tr>
+                <div class="col-md-4 col-sm-6 col-12 user-item animate__animated animate__zoomIn" 
+                     data-username="{{ user.username|lower }}" 
+                     data-email="{{ user.email|lower|default:'n/a' }}" 
+                     data-role="{{ user.userprofile.role|lower }}">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">{{ user.username }}</h5>
+                            <p class="text-muted"><strong>Email:</strong> {{ user.email|default:"N/A" }}</p>
+                            <p><strong>Role:</strong> 
+                                <span class="badge {% if user.userprofile.role == 'admin' %}bg-danger{% elif user.userprofile.role == 'manager' %}bg-warning{% else %}bg-info{% endif %}">
+                                    {{ user.userprofile.role|capfirst }}
+                                </span>
+                            </p>
+                            <p><strong>Active:</strong> 
+                                <span class="badge {% if user.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {{ user.is_active|yesno:"Yes,No" }}
+                                </span>
+                            </p>
+                            <a href="{% url 'user_edit' user.id %}" class="btn btn-primary btn-modern btn-sm mt-2" data-bs-toggle="tooltip" title="Edit this user">Edit</a>
+                        </div>
+                    </div>
+                </div>
             {% empty %}
-                <tr>
-                    <td colspan="5">No users found.</td>
-                </tr>
+                <div class="col-12 text-center animate__animated animate__fadeIn">
+                    <p class="text-muted">No users found.</p>
+                </div>
             {% endfor %}
-        </tbody>
-    </table>
+        </div>
+    </div>
+
+    <style>
+        .user-container {
+            padding: 20px;
+            background: linear-gradient(135deg, #edf6f9 0%, #83c5be 100%);
+            min-height: 100vh;
+        }
+        [data-bs-theme="dark"] .user-container {
+            background: linear-gradient(135deg, #14213d 0%, #3a506b 100%);
+        }
+        .card {
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        [data-bs-theme="dark"] .card {
+            background: rgba(44, 44, 44, 0.9);
+            color: #e0e0e0;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 10px;
+        }
+        .form-control:focus, .form-select:focus {
+            box-shadow: 0 0 10px rgba(0, 109, 119, 0.3);
+            border-color: #006d77;
+        }
+        .btn-modern {
+            font-size: 1rem;
+            padding: 10px;
+        }
+        .badge {
+            font-size: 0.9rem;
+            padding: 6px 12px;
+        }
+    </style>
+
+    <script>
+        $(document).ready(function() {
+            $('[data-bs-toggle="tooltip"]').tooltip();
+
+            // Search and Filter Logic
+            function filterUsers() {
+                const searchText = $('#searchInput').val().toLowerCase();
+                const role = $('#roleFilter').val().toLowerCase();
+
+                $('.user-item').each(function() {
+                    const username = $(this).data('username');
+                    const email = $(this).data('email');
+                    const userRole = $(this).data('role');
+                    const matchesSearch = username.includes(searchText) || email.includes(searchText);
+                    const matchesRole = !role || userRole === role;
+
+                    if (matchesSearch && matchesRole) {
+                        $(this).show().addClass('animate__animated animate__zoomIn');
+                    } else {
+                        $(this).hide().removeClass('animate__zoomIn');
+                    }
+                });
+            }
+
+            $('#searchInput').on('input', filterUsers);
+            $('#roleFilter').on('change', filterUsers);
+            $('#filterButton').on('click', function() {
+                $(this).addClass('bounce');
+                filterUsers();
+                setTimeout(() => $(this).removeClass('bounce'), 1000);
+            });
+
+            // Bounce effect on Edit buttons
+            $('.btn-modern').on('click', function() {
+                $(this).addClass('bounce');
+                setTimeout(() => $(this).removeClass('bounce'), 1000);
+            });
+        });
+    </script>
 {% endblock %}

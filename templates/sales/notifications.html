@@ -1,96 +1,120 @@
 {% extends 'base.html' %}
 {% block content %}
-    <h2>Notifications</h2>
+    <div class="notifications-container animate__animated animate__fadeIn">
+        <h2 class="mb-4 text-center" style="color: #006d77;">Notifications</h2>
 
-    <div class="card mt-4">
-        <div class="card-body">
-            <h5 class="card-title">Recent High-Value Sales (Last 24 Hours)</h5>
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Product</th>
-                            <th>Quantity</th>
-                            <th>Total</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for sale in recent_sales %}
-                            <tr>
-                                <td>{{ sale.user.username }}</td>
-                                <td>{{ sale.product.name }}</td>
-                                <td>{{ sale.quantity }}</td>
-                                <td>${{ sale.total_price|floatformat:2 }}</td>
-                                <td>{{ sale.sale_date|date:"Y-m-d H:i" }}</td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="5">No recent high-value sales.</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <!-- Recent High-Value Sales -->
+        <div class="card mb-4 shadow-lg animate__animated animate__zoomIn">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Recent High-Value Sales (Last 24 Hours)</h5>
+                <div class="row g-3" id="salesGrid">
+                    {% for sale in recent_sales %}
+                        <div class="col-md-4 col-sm-6 col-12 animate__animated animate__fadeInUp">
+                            <div class="notification-card card h-100">
+                                <div class="card-body text-center">
+                                    <p><strong>User:</strong> {{ sale.user.username }}</p>
+                                    <p><strong>Product:</strong> {{ sale.product.name }}</p>
+                                    <p><strong>Quantity:</strong> {{ sale.quantity }}</p>
+                                    <p><strong>Total:</strong> <span class="fw-bold" style="color: #7209b7;">${{ sale.total_price|floatformat:2 }}</span></p>
+                                    <p><strong>Date:</strong> {{ sale.sale_date|date:"Y-m-d H:i" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-12 text-center animate__animated animate__fadeIn">
+                            <p class="text-muted">No recent high-value sales.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Near-Expiration Products -->
+        <div class="card mb-4 shadow-lg animate__animated animate__zoomIn">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Near-Expiration Products (Within 7 Days)</h5>
+                <div class="row g-3" id="expirationGrid">
+                    {% for product in near_expiration %}
+                        <div class="col-md-4 col-sm-6 col-12 animate__animated animate__fadeInUp">
+                            <div class="notification-card card h-100">
+                                <div class="card-body text-center">
+                                    <p><strong>Product:</strong> {{ product.name }}</p>
+                                    <p><strong>Expiration:</strong> <span class="text-danger fw-bold">{{ product.expiration_date }}</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-12 text-center animate__animated animate__fadeIn">
+                            <p class="text-muted">No products nearing expiration.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Near-End-of-Stock Items -->
+        <div class="card mb-4 shadow-lg animate__animated animate__zoomIn">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Near-End-of-Stock Items</h5>
+                <div class="row g-3" id="stockGrid">
+                    {% for item in near_end_of_stock %}
+                        <div class="col-md-4 col-sm-6 col-12 animate__animated animate__fadeInUp">
+                            <div class="notification-card card h-100">
+                                <div class="card-body text-center">
+                                    <p><strong>Product:</strong> {{ item.product.name }}</p>
+                                    <p><strong>Quantity:</strong> {{ item.quantity }}</p>
+                                    <p><strong>Threshold:</strong> {{ item.low_stock_threshold }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-12 text-center animate__animated animate__fadeIn">
+                            <p class="text-muted">No items near end of stock.</p>
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="card mt-4">
-        <div class="card-body">
-            <h5 class="card-title">Near-Expiration Products (Within 7 Days)</h5>
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>Expiration Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for product in near_expiration %}
-                            <tr>
-                                <td>{{ product.name }}</td>
-                                <td>{{ product.expiration_date }}</td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="2">No products nearing expiration.</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    <style>
+        .notifications-container {
+            padding: 20px;
+            background: linear-gradient(135deg, #edf6f9 0%, #83c5be 100%);
+            min-height: 100vh;
+        }
+        [data-bs-theme="dark"] .notifications-container {
+            background: linear-gradient(135deg, #14213d 0%, #3a506b 100%);
+        }
+        .card {
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: none;
+        }
+        [data-bs-theme="dark"] .card {
+            background: rgba(44, 44, 44, 0.9);
+            color: #e0e0e0;
+        }
+        .notification-card {
+            border-radius: 10px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .notification-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+        .card-title {
+            color: #006d77;
+        }
+        .text-danger {
+            color: #dc3545 !important;
+        }
+    </style>
 
-    <div class="card mt-4">
-        <div class="card-body">
-            <h5 class="card-title">Near-End-of-Stock Items</h5>
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>Quantity</th>
-                            <th>Threshold</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in near_end_of_stock %}
-                            <tr>
-                                <td>{{ item.product.name }}</td>
-                                <td>{{ item.quantity }}</td>
-                                <td>{{ item.low_stock_threshold }}</td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="3">No items near end of stock.</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    <script>
+        $(document).ready(function() {
+            // No additional interactivity needed for now, but this is here for future enhancements
+        });
+    </script>
 {% endblock %}

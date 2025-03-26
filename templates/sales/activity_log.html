@@ -1,58 +1,114 @@
 {% extends 'base.html' %}
 {% block content %}
-    <h2>User Activity Log</h2>
+    <div class="activity-container animate__animated animate__fadeIn">
+        <h2 class="mb-4 text-center" style="color: #006d77;">User Activity Log</h2>
 
-    <form method="get" class="mt-4 mb-4">
-        <div class="row g-3">
-            <div class="col-12 col-md-4">
-                <label for="user" class="form-label">User</label>
-                {{ form.user }}
+        <!-- Filter Form -->
+        <form method="get" class="mb-4 animate__animated animate__fadeInUp">
+            <div class="row g-3">
+                <div class="col-md-4 col-12 position-relative">
+                    <label for="user" class="form-label">User</label>
+                    {{ form.user }}
+                    <i class="fas fa-user position-absolute" style="top: 50%; right: 15px; transform: translateY(50%); color: #006d77;"></i>
+                </div>
+                <div class="col-md-3 col-12 position-relative">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    {{ form.start_date }}
+                    <i class="fas fa-calendar-alt position-absolute" style="top: 50%; right: 15px; transform: translateY(50%); color: #006d77;"></i>
+                </div>
+                <div class="col-md-3 col-12 position-relative">
+                    <label for="end_date" class="form-label">End Date</label>
+                    {{ form.end_date }}
+                    <i class="fas fa-calendar-alt position-absolute" style="top: 50%; right: 15px; transform: translateY(50%); color: #006d77;"></i>
+                </div>
+                <div class="col-md-2 col-12 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-modern w-100" id="filterButton" data-bs-toggle="tooltip" title="Apply filters">Filter</button>
+                    <a href="{% url 'export_activity_csv' %}?{{ request.GET.urlencode }}" class="btn btn-secondary btn-modern" data-bs-toggle="tooltip" title="Export as CSV">CSV</a>
+                    <a href="{% url 'export_activity_pdf' %}?{{ request.GET.urlencode }}" class="btn btn-secondary btn-modern" data-bs-toggle="tooltip" title="Export as PDF">PDF</a>
+                </div>
             </div>
-            <div class="col-12 col-md-3">
-                <label for="start_date" class="form-label">Start Date</label>
-                {{ form.start_date }}
-            </div>
-            <div class="col-12 col-md-3">
-                <label for="end_date" class="form-label">End Date</label>
-                {{ form.end_date }}
-            </div>
-            <div class="col-12 col-md-2 d-flex align-items-end gap-2">
-                <button type="submit" class="btn btn-primary w-100">Filter</button>
-                <a href="{% url 'export_activity_csv' %}?{{ request.GET.urlencode }}" class="btn btn-secondary">CSV</a>
-                <a href="{% url 'export_activity_pdf' %}?{{ request.GET.urlencode }}" class="btn btn-secondary">PDF</a>
-            </div>
-        </div>
-    </form>
+        </form>
 
-    <div class="card mt-4">
-        <div class="card-body">
-            <h5 class="card-title">Activity Log</h5>
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Action</th>
-                            <th>Details</th>
-                            <th>Timestamp</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for action in activity %}
-                            <tr>
-                                <td>{{ action.user.username }}</td>
-                                <td>{{ action.get_action_display }}</td>
-                                <td>{{ action.details }}</td>
-                                <td>{{ action.timestamp|date:"Y-m-d H:i" }}</td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="4">No activity found.</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <!-- Activity Log Cards -->
+        <div class="card shadow-lg animate__animated animate__zoomIn">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Activity Log</h5>
+                <div class="row g-3" id="activityGrid">
+                    {% for action in activity %}
+                        <div class="col-md-4 col-sm-6 col-12 activity-item animate__animated animate__fadeInUp">
+                            <div class="activity-card card h-100">
+                                <div class="card-body text-center">
+                                    <p><strong>User:</strong> {{ action.user.username }}</p>
+                                    <p><strong>Action:</strong> {{ action.get_action_display }}</p>
+                                    <p><strong>Details:</strong> {{ action.details }}</p>
+                                    <p><strong>Timestamp:</strong> {{ action.timestamp|date:"Y-m-d H:i" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-12 text-center animate__animated animate__fadeIn">
+                            <p class="text-muted">No activity found.</p>
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
+
+    <style>
+        .activity-container {
+            padding: 20px;
+            background: linear-gradient(135deg, #edf6f9 0%, #83c5be 100%);
+            min-height: 100vh;
+        }
+        [data-bs-theme="dark"] .activity-container {
+            background: linear-gradient(135deg, #14213d 0%, #3a506b 100%);
+        }
+        .card {
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: none;
+        }
+        [data-bs-theme="dark"] .card {
+            background: rgba(44, 44, 44, 0.9);
+            color: #e0e0e0;
+        }
+        .activity-card {
+            border-radius: 10px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .activity-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 12px;
+            transition: box-shadow 0.3s, border-color 0.3s;
+        }
+        .form-control:focus, .form-select:focus {
+            box-shadow: 0 0 10px rgba(0, 109, 119, 0.3);
+            border-color: #006d77;
+        }
+        .btn-modern {
+            font-size: 1rem;
+            padding: 10px;
+        }
+        .card-title {
+            color: #006d77;
+        }
+    </style>
+
+    <script>
+        $(document).ready(function() {
+            $('[data-bs-toggle="tooltip"]').tooltip();
+
+            // Bounce effect on buttons
+            $('.btn-modern').on('click', function() {
+                $(this).addClass('bounce');
+                setTimeout(() => $(this).removeClass('bounce'), 1000);
+            });
+        });
+    </script>
 {% endblock %}
