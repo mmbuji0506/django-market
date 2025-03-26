@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div class="container mt-4" id="receipt">
+        <h2>Receipt</h2>
+        <p>Date: {{ sales.0.sale_date|date:"Y-m-d H:i" }}</p>
+        <p>Cashier: {{ request.user.username }}</p>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sale in sales %}
+                    <tr>
+                        <td>{{ sale.product.name }}</td>
+                        <td>{{ sale.quantity }}</td>
+                        <td>TShs.{{ sale.product.price|floatformat:2 }}</td>
+                        <td>TShs.{{ sale.total_price|floatformat:2 }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3"><strong>Total</strong></td>
+                    <td><strong>TShs.{{ total|floatformat:2 }}</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+        <p>Thank you for shopping with us!</p>
+    </div>
+    <button class="btn btn-primary mt-3" onclick="printReceipt()">Print Receipt</button>
+    <a href="{% url 'process_sale' %}" class="btn btn-secondary mt-3">Back to Sales</a>
+
+    <script>
+        function printReceipt() {
+            window.print();
+        }
+        // Auto-print on load (optional, remove if not desired)
+        window.onload = function() {
+            window.print();
+        }
+    </script>
+{% endblock %}

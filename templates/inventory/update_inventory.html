@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h2>Update Inventory: {{ inventory.product.name }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="barcode" class="form-label">Verify Barcode (Optional)</label>
+            {{ form.barcode }}
+            {% if form.barcode.errors %}
+                <div class="text-danger">{{ form.barcode.errors }}</div>
+            {% endif %}
+        </div>
+        {{ form.quantity.label_tag }} {{ form.quantity }}
+        {{ form.low_stock_threshold.label_tag }} {{ form.low_stock_threshold }}
+        {% if error %}
+            <div class="alert alert-danger mt-3">{{ error }}</div>
+        {% endif %}
+        <button type="submit" class="btn btn-primary mt-3">Save Changes</button>
+        <a href="{% url 'inventory_list' %}" class="btn btn-secondary mt-3">Cancel</a>
+    </form>
+{% endblock %}

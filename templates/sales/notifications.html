@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h2>Notifications</h2>
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5 class="card-title">Recent High-Value Sales (Last 24 Hours)</h5>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Total</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in recent_sales %}
+                            <tr>
+                                <td>{{ sale.user.username }}</td>
+                                <td>{{ sale.product.name }}</td>
+                                <td>{{ sale.quantity }}</td>
+                                <td>${{ sale.total_price|floatformat:2 }}</td>
+                                <td>{{ sale.sale_date|date:"Y-m-d H:i" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5">No recent high-value sales.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5 class="card-title">Near-Expiration Products (Within 7 Days)</h5>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Expiration Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in near_expiration %}
+                            <tr>
+                                <td>{{ product.name }}</td>
+                                <td>{{ product.expiration_date }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="2">No products nearing expiration.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5 class="card-title">Near-End-of-Stock Items</h5>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Threshold</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in near_end_of_stock %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.low_stock_threshold }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="3">No items near end of stock.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

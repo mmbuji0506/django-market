@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h2>Edit Cart Item: {{ cart_item.product.name }}</h2>
+    <form method="post" class="mt-4">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="quantity" class="form-label">Quantity</label>
+            <input type="number" name="quantity" id="quantity" class="form-control" value="{{ cart_item.quantity }}" min="0" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="{% url 'process_sale' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} mt-3">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endblock %}

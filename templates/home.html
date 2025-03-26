@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div class="jumbotron text-center">
+        <h1 class="display-4">Welcome to the Supermarket Management System</h1>
+        <p class="lead">Manage products, inventory, sales, and more with ease.</p>
+        <a class="btn btn-primary btn-lg" href="{% url 'product_list' %}" role="button">View Products</a>
+    </div>
+{% endblock %}

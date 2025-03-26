@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h2>Inventory Management</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Low Stock Threshold</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in inventory_items %}
+                <tr>
+                    <td>{{ item.product.name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.low_stock_threshold }}</td>
+                    <td>
+                        {% if item.is_low_stock %}
+                            <span class="badge bg-danger">Low Stock</span>
+                        {% else %}
+                            <span class="badge bg-success">In Stock</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'update_inventory' item.id %}" class="btn btn-sm btn-primary">Update</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5">No inventory items found.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
