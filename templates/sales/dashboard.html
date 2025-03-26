@@ -14,8 +14,8 @@
             </div>
             <div class="col-md-4 col-12 d-flex align-items-end gap-2">
                 <button type="submit" class="btn btn-primary btn-modern w-100">Filter</button>
-                <a href="{% url 'export_sales_csv' %}?{{ request.GET.urlencode }}" class="btn btn-outline-primary btn-modern">CSV</a>
-                <a href="{% url 'export_sales_pdf' %}?{{ request.GET.urlencode }}" class="btn btn-outline-primary btn-modern">PDF</a>
+                <a href="{% url 'export_sales_csv' %}?{{ request.GET.urlencode }}" class="btn btn-outline-primary btn-modern" data-bs-toggle="tooltip" title="Export as CSV">CSV</a>
+                <a href="{% url 'export_sales_pdf' %}?{{ request.GET.urlencode }}" class="btn btn-outline-primary btn-modern" data-bs-toggle="tooltip" title="Export as PDF">PDF</a>
             </div>
         </div>
     </form>
@@ -32,7 +32,7 @@
         <div class="col-md-8 col-12">
             <div class="card animate__animated animate__zoomIn">
                 <div class="card-body">
-                    <h5 class="card-title">Top 5 Products</h5>
+                    <h5 class="card-title">Top 5 Products by Sales Volume</h5>
                     <canvas id="topProductsChart" height="200"></canvas>
                 </div>
             </div>
@@ -61,11 +61,169 @@
         </div>
     </div>
 
-    <!-- ... (rest of the cards with similar animation classes) ... -->
+    <div class="card mt-4 animate__animated animate__fadeInUp">
+        <div class="card-body">
+            <h5 class="card-title">Recent Cart Abandonments (Last 5) <a href="{% url 'export_abandonment_csv' %}?{{ request.GET.urlencode }}" class="float-end btn btn-sm btn-secondary me-2">CSV</a><a href="{% url 'export_abandonment_pdf' %}?{{ request.GET.urlencode }}" class="float-end btn btn-sm btn-secondary">PDF</a></h5>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Added</th>
+                            <th>Abandoned</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in abandonment %}
+                            <tr class="animate__animated animate__fadeIn">
+                                <td>{{ item.user.username }}</td>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.added_at|date:"Y-m-d H:i" }}</td>
+                                <td>{{ item.abandoned_at|date:"Y-m-d H:i" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5">No recent abandonments.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-4 animate__animated animate__fadeInUp">
+        <div class="card-body">
+            <h5 class="card-title">Recent User Activity (Last 5) <a href="{% url 'activity_log' %}" class="float-end btn btn-sm btn-primary">View All</a></h5>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Details</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for action in activity %}
+                            <tr class="animate__animated animate__fadeIn">
+                                <td>{{ action.user.username }}</td>
+                                <td>{{ action.get_action_display }}</td>
+                                <td>{{ action.details }}</td>
+                                <td>{{ action.timestamp|date:"Y-m-d H:i" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4">No recent activity.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-4 animate__animated animate__fadeInUp">
+        <div class="card-body">
+            <h5 class="card-title">Low Stock Items</h5>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Threshold</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in low_stock %}
+                            <tr class="animate__animated animate__fadeIn">
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.low_stock_threshold }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="3">No low stock items.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" integrity="sha512-c42qTSw/wPZ3/5LBzD+Bw5f7bSF2oxou6wEb+I/lqeaKV5FDIfMvvRp772y4jcJLKuGUOpbJMdg/BTl50fJYAw==" crossorigin="anonymous">
     <script>
-        // Chart.js code remains the same, just add animation classes to elements
+        $(document).ready(function(){
+            $('[data-bs-toggle="tooltip"]').tooltip();
+
+            const topCtx = document.getElementById('topProductsChart').getContext('2d');
+            new Chart(topCtx, {
+                type: 'bar',
+                data: {
+                    labels: [{% for product in top_products %}'{{ product.product__name }}',{% endfor %}],
+                    datasets: [{
+                        label: 'Sales Volume',
+                        data: [{% for product in top_products %}{{ product.total_quantity }},{% endfor %}],
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+
+            const timeCtx = document.getElementById('salesOverTimeChart').getContext('2d');
+            new Chart(timeCtx, {
+                type: 'line',
+                data: {
+                    labels: [{% for sale in sales_over_time %}'{{ sale.day|date:"Y-m-d" }}',{% endfor %}],
+                    datasets: [{
+                        label: 'Daily Sales ($)',
+                        data: [{% for sale in sales_over_time %}{{ sale.daily_total|floatformat:2 }},{% endfor %}],
+                        fill: false,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        tension: 0.1
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+
+            const abandonCtx = document.getElementById('abandonmentOverTimeChart').getContext('2d');
+            new Chart(abandonCtx, {
+                type: 'line',
+                data: {
+                    labels: [{% for abandon in abandonment_over_time %}'{{ abandon.day|date:"Y-m-d" }}',{% endfor %}],
+                    datasets: [{
+                        label: 'Daily Abandoned Items',
+                        data: [{% for abandon in abandonment_over_time %}{{ abandon.total_abandoned }},{% endfor %}],
+                        fill: false,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        tension: 0.1
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+
+            function updateTotalSales() {
+                $.ajax({
+                    url: "{% url 'get_total_sales' %}",
+                    method: 'GET',
+                    success: function(data) {
+                        $('#totalSales').text(parseFloat(data.total_sales).toFixed(2));
+                    },
+                    error: function() {
+                        console.log('Error fetching total sales');
+                    }
+                });
+            }
+            setInterval(updateTotalSales, 10000);
+            updateTotalSales();
+        });
     </script>
 {% endblock %}
